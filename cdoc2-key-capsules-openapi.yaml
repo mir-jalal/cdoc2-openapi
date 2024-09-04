@@ -3,13 +3,14 @@ info:
   contact:
     url: http://ria.ee
   title: cdoc2-key-capsules
-  version: 2.1.0
+  version: sid2.1.0
   description: API for exchanging CDOC2 ephemeral key material in key capsules
 servers:
   - url: 'https://localhost:8443'
-    description: no auth (for creating key capsules)
+    description: no auth (for creating key capsules). Regular TLS (no mutual TLS required). May require bearerAuth, depending on endpoint
   - url: 'https://localhost:8444'
     description: mutual TLS authentication (for retrieving key capsules)
+
 paths:
   '/key-capsules/{transactionId}':
     get:
@@ -81,6 +82,111 @@ paths:
       security: []
       tags:
         - cdoc2-key-capsules
+
+  '/key-shares/{shareId}':
+    get:
+      summary: Get key share for shareId
+      description: Get key share for shareId
+      tags:
+        - cdoc2-key-shares
+      parameters:
+        - name: shareId
+          in: path
+          schema:
+            type: string
+            minLength: 18
+            maxLength: 34
+          required: true
+        - name: X-Auth-Ticket
+          in: header
+          schema:
+            type: string
+            format: byte
+          required: true
+          description: |
+            [Auth ticket](https://gitlab.cyber.ee/id/ee-ria/ria_tender_test_assignment_2023/-/blob/master/exercise-2.3-authentication-multi-server/multi-server-auth-protocol.md?ref_type=heads#cdoc2-autentimispiletid)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyShare'
+        '400':
+          description: 'Bad request. Client error.'
+        '401':
+          description: 'Unauthorized. No correct auth headers'
+        '404':
+          description: 'Not Found. 404 is also returned, when recipient id in record does not match user id in auth-ticket'
+      operationId: getKeyShareByShareId
+      security:
+        - basicAuth: []
+
+  '/key-shares':
+    post:
+      summary: Add Key Share
+      description: Save a key share and generate share id using secure random. Generated share is returned in Location header
+      operationId: createKeyShare
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /key-shares/SS0123456789ABCDEF
+              description: 'URI of created resource. ShareId can be extracted from URI as it follows pattern /key-shares/{shareId}'
+        '400':
+          description: 'Bad request. Client error.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyShare'
+      security:
+        - basicAuth: []
+      tags:
+        - cdoc2-key-shares
+
+  '/key-shares/{shareId}/nonce':
+    post:
+      description: |
+        Create server nonce for authentication signature.
+      operationId: createNonce
+      parameters:
+        - name: shareId
+          in: path
+          schema:
+            type: string
+            minLength: 18
+            maxLength: 34
+          required: true
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NonceResponse'
+        '400':
+          description: 'Bad request. Client error.'
+        '403':
+          description: 'Authentication failed'
+        '404':
+          description: 'Not Found. (shareId)'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: #empty request body
+              type: object
+              nullable: true
+      security:
+        - basicAuth: []
+      tags:
+        - cdoc2-key-shares
+
 components:
   schemas:
     Capsule:
@@ -115,6 +221,42 @@ components:
         - recipient_id
         - ephemeral_key_material
         - capsule_type
+
+  KeyShare:
+    title: Key Share
+    type: object
+    properties:
+      share:
+        type: string
+        format: byte
+        minLength: 32
+        maxLength: 128
+        description: Key Share. Binary format is yet to be defined [#RM-55912](https://rm-int.cyber.ee/ito/issues/55912)
+      recipient:
+        type: string
+        minLength: 12
+        maxLength: 32
+        description: |
+          Recipient who can download this share. ETSI319412-1. Example "etsi/PNOEE-48010010101". 
+          In future might support other formats 
+          [etsi/:semantics-identifier](https://github.com/SK-EID/smart-id-documentation/blob/v2/README.md#2322-etsisemantics-identifier)
+    required:
+      - share
+      - recipient
+
+  NonceResponse:
+    title: Nonce response
+    type: object
+    properties:
+      nonce:
+        type: string
+        format: byte
+        minLength: 12
+        maxLength: 16
+        description: 'server nonce for subsequent authentication'
+    required:
+      - nonce
+
   securitySchemes:
     mutualTLS:
       # since mutualTLS is not supported by OAS 3.0.x, then define it as http basic auth. MutualTLS must be implemented
@@ -122,5 +264,13 @@ components:
       #type: mutualTLS
       type: http
       scheme: basic
+    bearerAuth: # for /key-shares endpoints, long-term token
+      type: http
+      scheme: bearer
+    basicAuth: # temporary solution for initial functionality of /key-shares endpoints
+      type: http
+      scheme: basic
+
 tags:
   - name: cdoc2-key-capsules
+  - name: cdoc2-key-shares
