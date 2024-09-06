@@ -165,7 +165,7 @@
                             <version>${cdoc2-key-capsules-openapi.version}</version>
                             <packaging>yaml</packaging>
                             <repositoryId>${project.distributionManagement.repository.id}</repositoryId>
-                            <url>${project.distributionManagement.repository.url}</url>
+                            <url>https://gitlab.ext.cyber.ee/api/v4/projects/58/packages/maven</url>
                         </configuration>
                     </execution>
                 </executions>
