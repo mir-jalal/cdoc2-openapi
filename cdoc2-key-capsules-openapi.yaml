@@ -222,40 +222,40 @@ components:
         - ephemeral_key_material
         - capsule_type
 
-  KeyShare:
-    title: Key Share
-    type: object
-    properties:
-      share:
-        type: string
-        format: byte
-        minLength: 32
-        maxLength: 128
-        description: Key Share. Binary format is yet to be defined [#RM-55912](https://rm-int.cyber.ee/ito/issues/55912)
-      recipient:
-        type: string
-        minLength: 12
-        maxLength: 32
-        description: |
-          Recipient who can download this share. ETSI319412-1. Example "etsi/PNOEE-48010010101". 
-          In future might support other formats 
-          [etsi/:semantics-identifier](https://github.com/SK-EID/smart-id-documentation/blob/v2/README.md#2322-etsisemantics-identifier)
-    required:
-      - share
-      - recipient
+    KeyShare:
+      title: Key Share
+      type: object
+      properties:
+        share:
+          type: string
+          format: byte
+          minLength: 32
+          maxLength: 128
+          description: Key Share. Binary format is yet to be defined [#RM-55912](https://rm-int.cyber.ee/ito/issues/55912)
+        recipient:
+          type: string
+          minLength: 12
+          maxLength: 32
+          description: |
+            Recipient who can download this share. ETSI319412-1. Example "etsi/PNOEE-48010010101". 
+            In future might support other formats 
+            [etsi/:semantics-identifier](https://github.com/SK-EID/smart-id-documentation/blob/v2/README.md#2322-etsisemantics-identifier)
+      required:
+        - share
+        - recipient
 
-  NonceResponse:
-    title: Nonce response
-    type: object
-    properties:
-      nonce:
-        type: string
-        format: byte
-        minLength: 12
-        maxLength: 16
-        description: 'server nonce for subsequent authentication'
-    required:
-      - nonce
+    NonceResponse:
+      title: Nonce response
+      type: object
+      properties:
+        nonce:
+          type: string
+          format: byte
+          minLength: 12
+          maxLength: 16
+          description: 'server nonce for subsequent authentication'
+      required:
+        - nonce
 
   securitySchemes:
     mutualTLS:
