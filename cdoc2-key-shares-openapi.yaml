@@ -3,13 +3,11 @@ info:
   contact:
     url: http://ria.ee
   title: cdoc2-key-shares
-  version: 1.0.0
+  version: 1.0.0-draft
   description: API for exchanging CDOC2 key material shares
 servers:
   - url: 'https://localhost:8443'
-    description: basic auth (for creating key shares). Regular TLS (no mutual TLS required).
-  - url: 'https://localhost:8444'
-    description: basic auth (for retrieving key shares and nonce)
+    description: basic auth (for creating key shares, for retrieving key shares and nonce). Regular TLS (no mutual TLS required).
 
 paths:
   '/key-shares/{shareId}':
